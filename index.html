@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Sentence Translation Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        /* Style for the big chapter subtitle */
+        .chapter-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #e67e22;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .progress {
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .prompt-box {
+            background: #eef2f3;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .vietnamese-sentence {
+            font-size: 20px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            outline: none;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            border-color: #3498db;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            white-space: pre-line;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .stats {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🇩🇪 German Sentence Quiz</h1>
+    <div class="chapter-title">Kapitel 10: Studium und Beruf</div>
+    <div class="progress" id="progress">Question: 1 / 0</div>
+    
+    <div class="prompt-box">
+        <div class="vietnamese-sentence" id="vietnameseSentence">Loading...</div>
+    </div>
+
+    <div id="quizForm">
+        <textarea id="userAnswer" placeholder="Type the German sentence here..." autocomplete="off"></textarea>
+        <button id="submitBtn" onclick="checkAnswer()">Submit Answer</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+
+    <div class="stats" id="stats">Score: 0 | Remaining: 0</div>
+</div>
+
+<script>
+    const quizData = [
+        { de: "Mein Bruder ist arbeitslos.", vi: "Anh trai tôi đang thất nghiệp.", term: "arbeitslos" },
+        { de: "Mein Arbeitsplatz ist in der Stadt.", vi: "Nơi làm việc của tôi ở trong thành phố.", term: "der Arbeitsplatz" },
+        { de: "Ich suche eine neue Stelle.", vi: "Tôi đang tìm một vị trí việc làm mới.", term: "die Stelle" },
+        { de: "Mein Job ist interessant.", vi: "Công việc của tôi thú vị.", term: "der Job" },
+        { de: "Im Sommer habe ich einen Saisonjob.", vi: "Mùa hè tôi có một công việc thời vụ.", term: "der Saisonjob" },
+        { de: "Sie macht Karriere.", vi: "Cô ấy đang phát triển sự nghiệp.", term: "die Karriere" },
+        { de: "Ich verdiene 2.000 Euro im Monat.", vi: "Tôi kiếm được 2.000 euro mỗi tháng.", term: "verdienen" },
+        { de: "Wir haben ein neues Projekt.", vi: "Chúng tôi có một dự án mới.", term: "das Projekt" },
+        { de: "Die Aufgabe ist leicht.", vi: "Nhiệm vụ này dễ.", term: "die Aufgabe" },
+        { de: "Ich schreibe eine Bewerbung.", vi: "Tôi viết một đơn xin việc.", term: "die Bewerbung" },
+        { de: "Mein Profil ist online.", vi: "Hồ sơ của tôi ở trên mạng.", term: "das Profil" },
+        { de: "Ich suche im Internet nach einem Job.", vi: "Tôi tìm việc trên Internet.", term: "das Internet" },
+        { de: "Ich habe die Stelle durch ein Job-Portal gefunden.", vi: "Tôi tìm được công việc thông qua một trang tuyển dụng.", term: "durch" },
+        { de: "Um 17 Uhr habe ich Feierabend.", vi: "Tôi tan làm lúc 17 giờ.", term: "der Feierabend" },
+        { de: "Ich nehme im August Urlaub.", vi: "Tôi nghỉ phép vào tháng Tám.", term: "Urlaub nehmen" },
+        { de: "Der Händler verkauft Obst.", vi: "Người bán hàng bán trái cây.", term: "der Händler" },
+        { de: "Die Händlerin arbeitet auf dem Markt.", vi: "Nữ người bán hàng làm việc ở chợ.", term: "die Händlerin" },
+        { de: "Ich verkaufe mein Fahrrad.", vi: "Tôi bán chiếc xe đạp của mình.", term: "verkaufen" },
+        { de: "Die Ware ist neu.", vi: "Hàng hóa mới.", term: "die Ware" },
+        { de: "Der Künstler malt ein Bild.", vi: "Nam nghệ sĩ vẽ một bức tranh.", term: "der Künstler" },
+        { de: "Die Künstlerin kommt aus Berlin.", vi: "Nữ nghệ sĩ đến từ Berlin.", term: "die Künstlerin" },
+        { de: "Das Kind malt ein Haus.", vi: "Đứa trẻ vẽ một ngôi nhà.", term: "malen" },
+        { de: "Der Professor arbeitet an der Universität.", vi: "Giáo sư làm việc ở trường đại học.", term: "der Professor" },
+        { de: "Die Professorin unterrichtet Deutsch.", vi: "Nữ giáo sư dạy tiếng Đức.", term: "die Professorin" },
+        { de: "Der Segellehrer arbeitet am See.", vi: "Giáo viên dạy thuyền buồm làm việc ở hồ.", term: "der Segellehrer" },
+        { de: "Die Segellehrerin ist sehr nett.", vi: "Nữ giáo viên dạy thuyền buồm rất thân thiện.", term: "die Segellehrerin" },
+        { de: "Wir segeln am Wochenende.", vi: "Cuối tuần chúng tôi đi thuyền buồm.", term: "segeln" },
+        { de: "Der Sekretär schreibt eine E-Mail.", vi: "Nam thư ký viết một email.", term: "der Sekretär" },
+        { de: "Die Sekretärin telefoniert.", vi: "Nữ thư ký đang gọi điện.", term: "die Sekretärin" },
+        { de: "Sie betreut die Kunden.", vi: "Cô ấy phụ trách khách hàng.", term: "betreuen" },
+        { de: "Der Hotelchef arbeitet jeden Tag.", vi: "Quản lý khách sạn làm việc mỗi ngày.", term: "der Hotelchef" },
+        { de: "Die Hotelchefin ist freundlich.", vi: "Nữ quản lý khách sạn rất thân thiện.", term: "die Hotelchefin" },
+        { de: "Mein Vater arbeitet auf einer Baustelle.", vi: "Bố tôi làm việc ở một công trường xây dựng.", term: "die Baustelle" },
+        { de: "Er arbeitet bei einer Computerfirma.", vi: "Anh ấy làm việc tại một công ty máy tính.", term: "die Computerfirma" },
+        { de: "Sie arbeitet in einem Kaufhaus.", vi: "Cô ấy làm việc trong một cửa hàng bách hóa.", term: "das Kaufhaus" },
+        { de: "Mein Bruder arbeitet in einer Werkstatt.", vi: "Anh trai tôi làm việc ở một xưởng sửa chữa.", term: "die Werkstatt" },
+        { de: "Mein Studium dauert drei Jahre.", vi: "Chương trình đại học của tôi kéo dài ba năm.", term: "das Studium" },
+        { de: "Das Semester beginnt im Oktober.", vi: "Học kỳ bắt đầu vào tháng Mười.", term: "das Semester" },
+        { de: "Der Unterricht beginnt um acht Uhr.", vi: "Giờ học bắt đầu lúc tám giờ.", term: "der Unterricht" },
+        { de: "Die Prüfung ist am Montag.", vi: "Kỳ thi diễn ra vào thứ Hai.", term: "die Prüfung" },
+        { de: "Die Statistik ist interessant.", vi: "Số liệu thống kê thú vị.", term: "die Statistik" },
+        { de: "Mein Name steht auf der Liste.", vi: "Tên tôi có trong danh sách.", term: "die Liste" },
+        { de: "Die Studentin ist sehr fleißig.", vi: "Nữ sinh viên rất chăm chỉ.", term: "fleißig" },
+        { de: "Die Prüfung ist vorbei.", vi: "Kỳ thi kết thúc rồi.", term: "vorbei sein" },
+        { de: "Ich bekomme einen Anruf.", vi: "Tôi nhận được một cuộc gọi.", term: "der Anruf" },
+        { de: "Der Anschluss ist besetzt.", vi: "Đường dây đang bận.", term: "der Anschluss" },
+        { de: "Die Leitung ist besetzt.", vi: "Đường dây đang bận.", term: "besetzt" },
+        { de: "Am Telefon melde ich mich mit meinem Namen.", vi: "Khi nghe điện thoại, tôi xưng tên.", term: "melden" },
+        { de: "Ich frage noch einmal nach.", vi: "Tôi hỏi lại một lần nữa.", term: "nachfragen" },
+        { de: "Ich verbinde Sie mit Frau Schmitz.", vi: "Tôi nối máy cho ông/bà với bà Schmitz.", term: "verbinden" },
+        { de: "Können Sie mich mit Frau Schmitz verbinden?", vi: "Ông/Bà có thể nối máy cho tôi với bà Schmitz được không?", term: "Können Sie mich mit Frau Schmitz verbinden?" },
+        { de: "Die Durchwahl ist 25.", vi: "Số máy lẻ là 25.", term: "die Durchwahl" },
+        { de: "Können Sie mir die Durchwahl von Frau Schmitz geben?", vi: "Ông/Bà có thể cho tôi số máy lẻ của bà Schmitz không?", term: "Können Sie mir die Durchwahl..." },
+        { de: "Wie bitte? Noch einmal, bitte.", vi: "Xin lỗi, ông/bà nói lại một lần nữa được không?", term: "Wie bitte?" },
+        { de: "Vielen Dank. Auf Wiederhören!", vi: "Cảm ơn rất nhiều. Tạm biệt!", term: "Auf Wiederhören!" },
+        { de: "Die Veranstaltung beginnt um 19 Uhr.", vi: "Sự kiện bắt đầu lúc 19 giờ.", term: "die Veranstaltung" },
+        { de: "Die Kinder fahren Karussell.", vi: "Bọn trẻ chơi vòng quay ngựa gỗ.", term: "das Karussell" },
+        { de: "Wir besuchen den Weihnachtsmarkt.", vi: "Chúng tôi đi thăm chợ Giáng Sinh.", term: "der Weihnachtsmarkt" },
+        { de: "Das Karussell ist eine Attraktion.", vi: "Vòng quay ngựa gỗ là một điểm thu hút.", term: "die Attraktion" },
+        { de: "Die Sängerin steht auf der Bühne.", vi: "Nữ ca sĩ đứng trên sân khấu.", term: "die Bühne" },
+        { de: "Der Statist arbeitet beim Film.", vi: "Nam diễn viên quần chúng làm việc trong đoàn phim.", term: "der Statist" },
+        { de: "Die Statistin steht auf der Bühne.", vi: "Nữ diễn viên quần chúng đứng trên sân khấu.", term: "die Statistin" },
+        { de: "Der Zuschauer sieht die Show.", vi: "Nam khán giả xem chương trình.", term: "der Zuschauer" },
+        { de: "Die Zuschauerin klatscht.", vi: "Nữ khán giả vỗ tay.", term: "die Zuschauerin" },
+        { de: "Wir sehen heute eine Oper.", vi: "Hôm nay chúng tôi xem một vở opera.", term: "die Oper" },
+        { de: "Das Konzert findet am Samstag statt.", vi: "Buổi hòa nhạc diễn ra vào thứ Bảy.", term: "stattfinden" },
+        { de: "Der Anfang ist leicht.", vi: "Phần đầu dễ.", term: "der Anfang" },
+        { de: "Das Ende ist schön.", vi: "Phần kết rất đẹp.", term: "das Ende" },
+        { de: "Vietnam ist meine Heimat.", vi: "Việt Nam là quê hương của tôi.", term: "die Heimat" },
+        { de: "Ich arbeite im Ausland.", vi: "Tôi làm việc ở nước ngoài.", term: "das Ausland" },
+        { de: "Das ist meine Ehefrau.", vi: "Đây là vợ tôi.", term: "die Ehefrau" },
+        { de: "Mein Ehemann arbeitet in Berlin.", vi: "Chồng tôi làm việc ở Berlin.", term: "der Ehemann" },
+        { de: "Wir beide lernen Deutsch.", vi: "Cả hai chúng tôi đều học tiếng Đức.", term: "beide" },
+        { de: "Die Sängerin ist berühmt.", vi: "Nữ ca sĩ nổi tiếng.", term: "berühmt" },
+        { de: "Ich habe es eilig.", vi: "Tôi đang vội.", term: "eilig" },
+        { de: "Die Verkäuferin ist freundlich.", vi: "Nữ nhân viên bán hàng rất thân thiện.", term: "freundlich" },
+        { de: "Das Café ist leer.", vi: "Quán cà phê vắng.", term: "leer" },
+        { de: "Das ist ganz normal.", vi: "Điều đó hoàn toàn bình thường.", term: "normal" },
+        { de: "Wir fliegen nach Berlin.", vi: "Chúng tôi bay đến Berlin.", term: "fliegen" },
+        { de: "Früher wohnte er in Berlin.", vi: "Trước đây anh ấy sống ở Berlin.", term: "früher" },
+        { de: "Insgesamt sind wir zehn Personen.", vi: "Tổng cộng chúng tôi có mười người.", term: "insgesamt" },
+        { de: "Ich habe kaum Zeit.", vi: "Tôi hầu như không có thời gian.", term: "kaum" },
+        { de: "Der Film läuft heute im Kino.", vi: "Hôm nay bộ phim được chiếu ở rạp.", term: "laufen" },
+        { de: "Letzte Woche war ich in Berlin.", vi: "Tuần trước tôi ở Berlin.", term: "letzte" },
+        { de: "Das ist wirklich schön.", vi: "Điều đó thật sự đẹp.", term: "wirklich" },
+        { de: "Komm mal her!", vi: "Lại đây một chút nhé!", term: "mal" },
+        { de: "Ich sehe abends die Nachrichten.", vi: "Buổi tối tôi xem tin tức.", term: "die Nachrichten" },
+        { de: "Die Radiosendung beginnt um neun Uhr.", vi: "Chương trình phát thanh bắt đầu lúc chín giờ.", term: "die Radiosendung" },
+        { de: "Das Museum ist rund ums Jahr geöffnet.", vi: "Bảo tàng mở cửa quanh năm.", term: "rund ums Jahr" },
+        { de: "Wir machen einen Spaziergang.", vi: "Chúng tôi đi dạo.", term: "der Spaziergang" },
+        { de: "Der Tennisplatz ist neben dem Park.", vi: "Sân tennis ở cạnh công viên.", term: "der Tennisplatz" },
+        { de: "Ich trainiere dreimal pro Woche.", vi: "Tôi tập luyện ba lần mỗi tuần.", term: "trainieren" }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let shuffledData = [];
+
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function initGame() {
+        shuffledData = shuffle([...quizData]);
+        currentIndex = 0;
+        score = 0;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= shuffledData.length) {
+            document.querySelector(".container").innerHTML = `
+                <h1>🎉 Quiz Completed!</h1>
+                <p style="text-align: center; font-size: 18px;">Your final score is: <strong>${score} / ${shuffledData.length}</strong></p>
+                <button onclick="location.reload()">Play Again</button>
+            `;
+            return;
+        }
+
+        const currentQ = shuffledData[currentIndex];
+        document.getElementById("vietnameseSentence").innerText = `(${currentQ.vi})`;
+        document.getElementById("userAnswer").value = "";
+        document.getElementById("feedback").style.display = "none";
+        document.getElementById("submitBtn").innerText = "Submit Answer";
+        document.getElementById("submitBtn").onclick = checkAnswer;
+        
+        document.getElementById("progress").innerText = `Question: ${currentIndex + 1} / ${shuffledData.length}`;
+        document.getElementById("stats").innerText = `Score: ${score} | Remaining: ${shuffledData.length - currentIndex}`;
+        
+        document.getElementById("userAnswer").focus();
+    }
+
+    function checkAnswer() {
+        const userIn = document.getElementById("userAnswer").value.trim();
+        const currentQ = shuffledData[currentIndex];
+        const feedbackDiv = document.getElementById("feedback");
+
+        if (!userIn) {
+            alert("Please type a German sentence first!");
+            return;
+        }
+
+        if (userIn === currentQ.de) {
+            feedbackDiv.className = "feedback correct";
+            feedbackDiv.innerText = "✅ Correct!";
+            score++;
+        } else {
+            feedbackDiv.className = "feedback incorrect";
+            feedbackDiv.innerHTML = `❌ Incorrect!\n\nCorrect German sentence:\n<strong>${currentQ.de}</strong>`;
+        }
+
+        feedbackDiv.style.display = "block";
+        
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.innerText = "Next Question ➡️";
+        submitBtn.onclick = () => {
+            currentIndex++;
+            loadQuestion();
+        };
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
